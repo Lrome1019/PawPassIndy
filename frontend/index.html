@@ -12,7 +12,12 @@
 </head>
 <body class="text-gray-900">
 <main class="max-w-2xl mx-auto p-3 space-y-3">
+  <a href="/report.html" class="btn">📍 Report a sighting</a>
   <div id="map" class="w-full rounded-xl" style="height:50vh"></div>
+  <div class="grid grid-cols-2 gap-2">
+    <button id="toIndy" class="btn btn-alt">Show Indy</button>
+    <button id="toMe" class="btn btn-alt">My location</button>
+  </div>
   <div class="flex gap-4 text-sm px-1">
     <span><span class="inline-block pin pin-lost align-middle"></span> Lost pet</span>
     <span><span class="inline-block pin pin-sight align-middle"></span> Sighting</span>
@@ -40,7 +45,8 @@ async function refresh() {
       if (p.last_seen_lat == null) return;
       pts.push([p.last_seen_lat, p.last_seen_lng]);
       L.marker([p.last_seen_lat, p.last_seen_lng], { icon: icon("pin-lost") }).addTo(layer)
-        .bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.color)} ${esc(p.species)}<br>Lost ${p.last_seen_at ? ago(p.last_seen_at) : ""}`);
+        .bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.color)} ${esc(p.species)}<br>Lost ${p.last_seen_at ? ago(p.last_seen_at) : ""}<br>
+          <a href="${USE_MOCK ? "/tag.html?code=" + encodeURIComponent(p.tag_code) : "/t/" + encodeURIComponent(p.tag_code)}">View tag page</a>`);
     });
     feed.sightings.forEach(s => {
       if (s.lat == null) return;
@@ -59,6 +65,11 @@ async function refresh() {
     $("#updated").textContent = "Updated " + new Date().toLocaleTimeString();
   } catch (e) { $("#updated").textContent = "Offline, retrying…"; }
 }
+$("#toIndy").onclick = () => map.setView([39.7684, -86.1581], 11);
+$("#toMe").onclick = async () => {
+  try { const c = await getLocation(); map.setView([c.lat, c.lng], 14); L.circleMarker([c.lat, c.lng], { radius: 8, color: "#2563eb" }).addTo(map); }
+  catch (e) { alert(e.message); }
+};
 refresh();
 setInterval(refresh, 5000); // live updates every 5s
 </script>
