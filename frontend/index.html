@@ -4,36 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PawPass Indy</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="/css/app.css">
 <script src="/js/api.js"></script>
 </head>
-<body class="text-gray-900">
-<main class="max-w-2xl mx-auto p-3 space-y-3">
-  <a href="/report.html" class="btn">📍 Report a sighting</a>
-  <div id="map" class="w-full rounded-xl" style="height:50vh"></div>
-  <div class="grid grid-cols-2 gap-2">
+<body>
+<main class="page stack">
+  <a href="/report.html" class="btn btn-big">Report a sighting</a>
+  <div id="map" class="map-box" style="height:50vh"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
     <button id="toIndy" class="btn btn-alt">Show Indy</button>
     <button id="toMe" class="btn btn-alt">My location</button>
   </div>
-  <div class="flex gap-4 text-sm px-1 whitespace-nowrap">
-    <span><span class="inline-block pin pin-lost align-middle"></span> Lost pet</span>
-    <span><span class="inline-block pin pin-sight align-middle"></span> Sighting</span>
-    <span id="updated" class="ml-auto text-gray-500"></span>
+  <div class="legend">
+    <span><span class="pin pin-lost"></span> Lost pet</span>
+    <span><span class="pin pin-sight"></span> Sighting</span>
+    <span id="updated" class="muted small" style="margin-left:auto"></span>
   </div>
-  <h2 class="font-bold text-lg">Lost pets</h2>
-  <div id="lost" class="space-y-2"></div>
-  <h2 class="font-bold text-lg">Recent sightings</h2>
-  <div id="sightings" class="space-y-2"></div>
+  <h2 class="section-title">Lost pets</h2>
+  <div id="lost" class="stack"></div>
+  <h2 class="section-title">Recent sightings</h2>
+  <div id="sightings" class="stack"></div>
 </main>
 <script>
 renderNav("Map");
 const map = L.map("map").setView([39.7684, -86.1581], 10);
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(map);
+// OpenStreetMap tiles (free, no key). CartoDB Positron now needs an API key,
+// so app.css mutes these with a grayscale filter instead.
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  { attribution: "© OpenStreetMap", maxZoom: 19 }).addTo(map);
 const layer = L.layerGroup().addTo(map);
-const icon = cls => L.divIcon({ className: "", html: `<div class="pin ${cls}"></div>`, iconSize: [18, 18] });
+const icon = cls => L.divIcon({ className: "", html: `<div class="pin ${cls}"></div>`, iconSize: [16, 16] });
 let fitted = false;
 
 async function refresh() {
@@ -45,7 +49,7 @@ async function refresh() {
       if (p.last_seen_lat == null) return;
       pts.push([p.last_seen_lat, p.last_seen_lng]);
       L.marker([p.last_seen_lat, p.last_seen_lng], { icon: icon("pin-lost") }).addTo(layer)
-        .bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.color)} ${esc(p.species)}<br>Lost ${p.last_seen_at ? ago(p.last_seen_at) : ""}<br>
+        .bindPopup(`<b>${esc(p.name)}</b> (lost)<br>${esc(p.color)} ${esc(p.species)}<br>Last seen ${p.last_seen_at ? ago(p.last_seen_at) : ""}<br>
           <a href="${USE_MOCK ? "/tag.html?code=" + encodeURIComponent(p.tag_code) : "/t/" + encodeURIComponent(p.tag_code)}">View tag page</a>`);
     });
     feed.sightings.forEach(s => {
@@ -56,18 +60,20 @@ async function refresh() {
     });
     if (!fitted && pts.length) { map.fitBounds(pts, { padding: [30, 30], maxZoom: 12 }); fitted = true; }
     $("#lost").innerHTML = feed.lost_pets.map(p => `
-      <a href="/pet.html?id=${p.id}" class="card block min-h-[44px]">
-        <b>${esc(p.name)}</b> <span class="text-gray-500">${esc(p.color)} ${esc(p.species)}</span>
-        <div class="text-sm text-gray-600">${esc(p.lost_notes)}</div></a>`).join("") || '<p class="text-gray-500">No lost pets.</p>';
-    $("#sightings").innerHTML = feed.sightings.slice().reverse().map(s => `
-      <div class="card"><div>${esc(s.description)}</div>
-      <div class="text-sm text-gray-500">${ago(s.created_at)}${s.reporter_name ? " · " + esc(s.reporter_name) : ""}</div></div>`).join("") || '<p class="text-gray-500">No sightings yet.</p>';
+      <a href="/pet.html?id=${p.id}" class="card feed-item lost">
+        <span class="tag-lost">Lost</span> <b>${esc(p.name)}</b> <span class="muted">${esc(p.color)} ${esc(p.species)}</span>
+        <div class="small muted">${esc(p.lost_notes)}</div></a>`).join("") || '<p class="muted">No lost pets.</p>';
+    // newest first, whatever order the server sends them in
+    const newest = feed.sightings.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    $("#sightings").innerHTML = newest.map(s => `
+      <div class="card feed-item sight"><div>${esc(s.description)}</div>
+      <div class="small muted">${ago(s.created_at)}${s.reporter_name ? " · " + esc(s.reporter_name) : ""}</div></div>`).join("") || '<p class="muted">No sightings yet.</p>';
     $("#updated").textContent = "Updated " + new Date().toLocaleTimeString();
   } catch (e) { $("#updated").textContent = "Offline, retrying…"; }
 }
 $("#toIndy").onclick = () => map.setView([39.7684, -86.1581], 11);
 $("#toMe").onclick = async () => {
-  try { const c = await getLocation(); map.setView([c.lat, c.lng], 14); L.circleMarker([c.lat, c.lng], { radius: 8, color: "#2563eb" }).addTo(map); }
+  try { const c = await getLocation(); map.setView([c.lat, c.lng], 14); L.circleMarker([c.lat, c.lng], { radius: 8, color: "#1D2D44" }).addTo(map); }
   catch (e) { alert(e.message); }
 };
 refresh();

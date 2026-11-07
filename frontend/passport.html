@@ -4,21 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>New Pet Passport · PawPass Indy</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/app.css">
 <script src="/js/api.js"></script>
 </head>
-<body class="text-gray-900">
-<main class="max-w-2xl mx-auto p-3">
-  <form id="form" class="space-y-3">
-    <h1 class="text-xl font-bold">Create a Pet Passport</h1>
+<body>
+<main class="page">
+  <!-- "My pets" list (Task 3) will go here -->
+  <section id="mypets"></section>
+
+  <form id="form" class="stack">
+    <h1>Create a pet passport</h1>
+    <p class="muted small">One profile per pet. Fields marked * are required.</p>
     <input class="field" name="name" placeholder="Name *" required>
     <input class="field" name="previous_names" placeholder="Previous names (comma-separated)">
-    <div class="grid grid-cols-2 gap-2">
+    <div class="two">
       <select class="field" name="species" required><option value="">Species *</option><option>dog</option><option>cat</option><option>other</option></select>
       <select class="field" name="size"><option value="">Size</option><option>small</option><option>medium</option><option>large</option></select>
     </div>
-    <div class="grid grid-cols-2 gap-2">
+    <div class="two">
       <input class="field" name="breed" placeholder="Breed">
       <input class="field" name="color" placeholder="Color">
     </div>
@@ -27,25 +32,24 @@
     <input class="field" name="microchip_number" placeholder="Microchip number" inputmode="numeric">
     <input class="field" name="chip_registry" placeholder="Chip registry">
     <input class="field" name="adoption_shelter" placeholder="Adoption shelter">
-    <div class="grid grid-cols-2 gap-2">
+    <div class="two">
       <input class="field" type="date" name="adoption_date" aria-label="Adoption date">
       <input class="field" name="adoption_id" placeholder="Adoption ID">
     </div>
-    <h2 class="font-semibold pt-2">Owner (never shown publicly)</h2>
+    <h2 class="section-title">Owner <span class="muted small" style="font-family:var(--font-body);font-weight:400">(never shown publicly)</span></h2>
     <input class="field" name="owner_name" placeholder="Your name">
     <input class="field" name="owner_phone" type="tel" placeholder="Phone">
     <input class="field" name="owner_email" type="email" placeholder="Email">
-    <button class="btn" id="submit">Create passport</button>
-    <p id="err" class="text-red-600"></p>
-    <section id ="mypets">script</section>
+    <button class="btn btn-big" id="submit">Create passport</button>
+    <p id="err" class="err"></p>
   </form>
 
-  <section id="done" class="hidden space-y-3 text-center">
-    <h1 class="text-xl font-bold">🎉 <span id="petname"></span> has a passport!</h1>
+  <section id="done" class="stack center" hidden>
+    <h1><span id="petname"></span> has a passport.</h1>
     <div id="qr" class="card"></div>
-    <div class="card text-left">
-      <p class="text-sm text-gray-600">Write this URL to your NFC tag:</p>
-      <p id="taglink" class="break-all font-mono text-sm"></p>
+    <div class="card" style="text-align:left">
+      <p class="small muted" style="margin:0 0 4px">Write this URL to your NFC tag:</p>
+      <p id="taglink" class="mono" style="margin:0"></p>
     </div>
     <a id="petlink" class="btn">Open owner page</a>
     <a id="taglinkbtn" class="btn btn-alt">Preview tag page</a>
@@ -79,9 +83,9 @@ $("#form").addEventListener("submit", async e => {
     $("#petlink").href = `/pet.html?id=${pet.id}`;
     const qr = api.qrUrl(pet.id);
     $("#qr").innerHTML = qr
-      ? `<img src="${qr}" alt="QR code" class="mx-auto w-64 h-64">`
-      : `<div class="p-6 text-gray-500">QR code appears here once the backend is connected.<br>(Mock mode)</div>`;
-    $("#form").classList.add("hidden"); $("#done").classList.remove("hidden");
+      ? `<img src="${qr}" alt="QR code" class="qr-img">`
+      : `<div class="muted" style="padding:24px">QR code appears here once the backend is connected.<br>(Mock mode)</div>`;
+    $("#form").hidden = true; $("#done").hidden = false;
   } catch (err) {
     $("#err").textContent = "Couldn't save: " + err.message;
     $("#submit").disabled = false;
