@@ -37,6 +37,7 @@
     <input class="field" name="owner_email" type="email" placeholder="Email">
     <button class="btn" id="submit">Create passport</button>
     <p id="err" class="text-red-600"></p>
+    <section id ="mypets">script</section>
   </form>
 
   <section id="done" class="hidden space-y-3 text-center">
@@ -54,6 +55,16 @@
 renderNav("New Pet");
 // Mock mode has no /t/ route (static server), so use tag.html?code=
 const tagPath = code => USE_MOCK ? `/tag.html?code=${code}` : `/t/${code}`;
+
+// Reads the saved list of pets from this browser (or [] if none / storage unavailable)
+function getMyPets() {
+  try {
+    const saved = localStorage.getItem("pawpass_my_pets");
+    return JSON.parse(saved || "[]");
+  } catch (e) {
+    return [];
+  }
+}
 
 $("#form").addEventListener("submit", async e => {
   e.preventDefault();
