@@ -28,9 +28,9 @@ function renderNav(active) {
   const nav = document.createElement("nav");
   nav.className = "sticky top-0 z-[1000] bg-amber-500 text-white shadow";
   nav.innerHTML = `<div class="max-w-2xl mx-auto flex items-center justify-between px-3">
-    <a href="/" class="font-bold text-lg py-3">🐾 PawPass Indy</a>
-    <div class="flex">${links.map(([h, t]) =>
-      `<a href="${h}" class="px-3 py-3 min-h-[44px] ${active === t ? "underline font-semibold" : ""}">${t}</a>`).join("")}</div></div>
+    <a href="/" class="font-bold text-base py-3 whitespace-nowrap">🐾 PawPass</a>
+    <div class="flex text-sm">${links.map(([h, t]) =>
+      `<a href="${h}" class="px-2 py-3 min-h-[44px] whitespace-nowrap ${active === t ? "underline font-semibold" : ""}">${t}</a>`).join("")}</div></div>
     ${USE_MOCK ? '<div class="bg-yellow-100 text-yellow-900 text-xs text-center py-1">Demo mode: mock data</div>' : ""}`;
   document.body.prepend(nav);
 }
