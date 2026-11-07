@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report a sighting · PawPass Indy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/css/app.css">
+<script src="/js/api.js"></script>
+</head>
+<body class="text-gray-900">
+<main class="max-w-2xl mx-auto p-3 space-y-3">
+  <form id="form" class="space-y-3">
+    <h1 class="text-xl font-bold">Report a sighting</h1>
+    <p id="tagged" class="hidden card text-sm text-green-700">Reporting for a tagged pet.</p>
+    <textarea class="field" name="description" rows="4" required
+      placeholder="Describe what you saw, e.g. small brown dog with white chest near Fishers library"></textarea>
+    <input class="field" name="reporter_name" placeholder="Your name (optional)">
+    <button type="button" id="loc" class="btn btn-alt">📍 Use my location</button>
+    <p id="locstatus" class="text-sm text-gray-600"></p>
+    <button class="btn" id="submit">Submit sighting</button>
+    <p id="err" class="text-red-600"></p>
+  </form>
+
+  <section id="result" class="hidden space-y-3">
+    <h1 class="text-xl font-bold">Thanks! Sighting reported ✅</h1>
+    <div class="card"><h2 class="font-semibold mb-1">What our AI understood</h2><div id="parsed" class="flex flex-wrap gap-2"></div></div>
+    <h2 class="font-semibold">Possible matches</h2>
+    <div id="matches" class="space-y-2"></div>
+    <a href="/" class="btn">See it on the map</a>
+  </section>
+</main>
+<script>
+renderNav("Report");
+const petId = new URLSearchParams(location.search).get("pet_id");
+if (petId) $("#tagged").classList.remove("hidden");
+let coords = null;
+
+$("#loc").onclick = async () => {
+  $("#locstatus").textContent = "Getting location…";
+  try { coords = await getLocation(); $("#locstatus").textContent = `Location set (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`; }
+  catch (e) { $("#locstatus").textContent = e.message; }
+};
+
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("#submit").disabled = true; $("#err").textContent = "";
+  const f = Object.fromEntries(new FormData(e.target).entries());
+  // Fallback to Indianapolis center if the finder skipped location
+  const body = { description: f.description, reporter_name: f.reporter_name,
+                 lat: coords ? coords.lat : 39.7684, lng: coords ? coords.lng : -86.1581 };
+  if (petId) body.pet_id = Number(petId);
+  try {
+    const { sighting, matches } = await api.createSighting(body);
+    const chips = ["species", "color", "size", "breed", "markings"].filter(k => sighting[k])
+      .map(k => `<span class="bg-amber-100 rounded-full px-3 py-1 text-sm"><b>${k}:</b> ${esc(sighting[k])}</span>`).join("");
+    $("#parsed").innerHTML = chips || '<span class="text-gray-500">Nothing specific detected.</span>';
+    $("#matches").innerHTML = matches.map(m => `
+      <div class="card">
+        <div class="flex justify-between"><b>${esc(m.pet.name)}</b><span>${Math.round(m.score * 100)}%</span></div>
+        <div class="h-2 bg-gray-200 rounded mt-1"><div class="h-2 bg-amber-500 rounded" style="width:${Math.round(m.score * 100)}%"></div></div>
+        <ul class="text-sm text-gray-600 mt-2 list-disc pl-5">${m.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      </div>`).join("") || '<p class="text-gray-500">No matching lost pets right now.</p>';
+    $("#form").classList.add("hidden"); $("#result").classList.remove("hidden");
+  } catch (err) {
+    $("#err").textContent = "Couldn't send: " + err.message;
+    $("#submit").disabled = false;
+  }
+});
+</script>
+</body>
+</html>

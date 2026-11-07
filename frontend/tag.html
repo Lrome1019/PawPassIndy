@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Found a pet? · PawPass Indy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/css/app.css">
+<script src="/js/api.js"></script>
+</head>
+<body class="text-gray-900">
+<main class="max-w-2xl mx-auto p-3 space-y-3" id="main"><p class="text-gray-500">Loading…</p></main>
+<script>
+renderNav("");
+// Code comes from /t/{code} (backend) or ?code= (mock/static)
+const code = new URLSearchParams(location.search).get("code") || location.pathname.split("/").filter(Boolean).pop();
+const row = (k, v) => v ? `<div class="flex justify-between gap-3 py-1 border-b border-gray-100"><span class="text-gray-500">${k}</span><span class="text-right">${esc(v)}</span></div>` : "";
+
+api.getTag(code).then(p => {
+  $("#main").innerHTML = `
+    <div class="card text-center space-y-2">
+      ${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="${esc(p.name)}" class="mx-auto rounded-xl max-h-64">` : '<div class="text-7xl">' + (p.species === "cat" ? "🐱" : "🐶") + "</div>"}
+      <h1 class="text-2xl font-bold">${esc(p.name)}</h1>
+      ${p.is_lost ? '<p class="text-red-600 font-semibold">⚠️ This pet is marked LOST</p>' : ""}
+    </div>
+    <div class="card">
+      ${row("Species", p.species)}${row("Breed", p.breed)}${row("Color", p.color)}${row("Size", p.size)}
+      ${row("Features", p.markings)}${row("Also answers to", p.previous_names)}
+    </div>
+    <a href="/report.html?pet_id=${p.id}" class="btn">📍 Report a sighting</a>
+    <p class="text-xs text-gray-500 text-center">Owner contact details are kept private.</p>`;
+}).catch(() => { $("#main").innerHTML = '<p class="card text-red-600">Sorry, we couldn\'t find that tag.</p>'; });
+</script>
+</body>
+</html>

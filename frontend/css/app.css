@@ -1,0 +1,9 @@
+body { -webkit-tap-highlight-color: transparent; background:#fffbeb; }
+input, select, textarea, button { font-size: 16px; } /* stops iOS zoom on focus */
+.btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 20px; border-radius:12px; font-weight:600; background:#f59e0b; color:#fff; width:100%; }
+.btn:active { background:#d97706; }
+.btn-alt { background:#e5e7eb; color:#111827; }
+.field { width:100%; min-height:44px; padding:10px 12px; border:1px solid #d1d5db; border-radius:10px; background:#fff; }
+.card { background:#fff; border-radius:14px; padding:14px; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+.pin { width:18px; height:18px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 3px rgba(0,0,0,.6); }
+.pin-lost { background:#dc2626; } .pin-sight { background:#facc15; }

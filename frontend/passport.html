@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Pet Passport · PawPass Indy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/css/app.css">
+<script src="/js/api.js"></script>
+</head>
+<body class="text-gray-900">
+<main class="max-w-2xl mx-auto p-3">
+  <form id="form" class="space-y-3">
+    <h1 class="text-xl font-bold">Create a Pet Passport</h1>
+    <input class="field" name="name" placeholder="Name *" required>
+    <input class="field" name="previous_names" placeholder="Previous names (comma-separated)">
+    <div class="grid grid-cols-2 gap-2">
+      <select class="field" name="species" required><option value="">Species *</option><option>dog</option><option>cat</option><option>other</option></select>
+      <select class="field" name="size"><option value="">Size</option><option>small</option><option>medium</option><option>large</option></select>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <input class="field" name="breed" placeholder="Breed">
+      <input class="field" name="color" placeholder="Color">
+    </div>
+    <input class="field" name="markings" placeholder="Identifying features">
+    <input class="field" name="microchip_number" placeholder="Microchip number" inputmode="numeric">
+    <input class="field" name="chip_registry" placeholder="Chip registry">
+    <input class="field" name="adoption_shelter" placeholder="Adoption shelter">
+    <div class="grid grid-cols-2 gap-2">
+      <input class="field" type="date" name="adoption_date" aria-label="Adoption date">
+      <input class="field" name="adoption_id" placeholder="Adoption ID">
+    </div>
+    <h2 class="font-semibold pt-2">Owner (never shown publicly)</h2>
+    <input class="field" name="owner_name" placeholder="Your name">
+    <input class="field" name="owner_phone" type="tel" placeholder="Phone">
+    <input class="field" name="owner_email" type="email" placeholder="Email">
+    <button class="btn" id="submit">Create passport</button>
+    <p id="err" class="text-red-600"></p>
+  </form>
+
+  <section id="done" class="hidden space-y-3 text-center">
+    <h1 class="text-xl font-bold">🎉 <span id="petname"></span> has a passport!</h1>
+    <div id="qr" class="card"></div>
+    <div class="card text-left">
+      <p class="text-sm text-gray-600">Write this URL to your NFC tag:</p>
+      <p id="taglink" class="break-all font-mono text-sm"></p>
+    </div>
+    <a id="petlink" class="btn">Open owner page</a>
+    <a id="taglinkbtn" class="btn btn-alt">Preview tag page</a>
+  </section>
+</main>
+<script>
+renderNav("New Pet");
+// Mock mode has no /t/ route (static server), so use tag.html?code=
+const tagPath = code => USE_MOCK ? `/tag.html?code=${code}` : `/t/${code}`;
+
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("#submit").disabled = true; $("#err").textContent = "";
+  const body = Object.fromEntries(new FormData(e.target).entries());
+  try {
+    const pet = await api.createPet(body);
+    const url = location.origin + tagPath(pet.tag_code);
+    $("#petname").textContent = pet.name;
+    $("#taglink").textContent = url;
+    $("#taglinkbtn").href = tagPath(pet.tag_code);
+    $("#petlink").href = `/pet.html?id=${pet.id}`;
+    const qr = api.qrUrl(pet.id);
+    $("#qr").innerHTML = qr
+      ? `<img src="${qr}" alt="QR code" class="mx-auto w-64 h-64">`
+      : `<div class="p-6 text-gray-500">QR code appears here once the backend is connected.<br>(Mock mode)</div>`;
+    $("#form").classList.add("hidden"); $("#done").classList.remove("hidden");
+  } catch (err) {
+    $("#err").textContent = "Couldn't save: " + err.message;
+    $("#submit").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
