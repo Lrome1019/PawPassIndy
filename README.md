@@ -1,4 +1,4 @@
-# 🐾 PawPass Indy
+#  PawPass Indy
 
 **A community lost-pet network for Hoosiers: one tap on a collar tag brings a pet home.**
 
