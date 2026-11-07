@@ -25,7 +25,7 @@ The data that reunites families exists, but it's scattered and stale. **PawPass 
 
 ---
 
-## Tech stack (free, no build step)
+## Tech stack
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS sightings (
 
 ---
 
-## API contract (the source of truth: build against this exactly)
+
 
 All JSON. **Public endpoints (`/api/tag/*`, `/api/feed`) never return `owner_phone`, `owner_email`, or `microchip_number`.**
 
@@ -171,10 +171,6 @@ reasons[]: one readable string per factor that scored > 0
 
 ---
 
-## Who does what
-
-Only Laura has Claude Code. **The classmate writes the backend by hand in VS Code.** Laura and Claude handle the frontend, and if Laura's side finishes early she can help with the backend.
-
 **Jovan Dukes: backend (`backend/`)**
 - [ ] **B1** `db.py`: `get_conn()` (with `row_factory = sqlite3.Row`) and `init_db()` running the schema above. Then `seed.py` with about 8 lost pets and about 15 sightings around Indy, Fishers, and Muncie.
 - [ ] **B2** `main.py`: `POST/GET /api/pets`, `tag_code` via `secrets.token_urlsafe(6)`, the QR endpoint, and `GET /api/tag/{code}` (strip private fields).
@@ -191,34 +187,9 @@ Only Laura has Claude Code. **The classmate writes the backend by hand in VS Cod
 - [ ] **F6** `pet.html`: "Mark as lost" toggle (uses current location) and a match list with score bars and reasons.
 - [ ] **F7** Program a real NFC sticker, write the demo script, rehearse.
 
-When the backend endpoints work, flip `USE_MOCK = false`. Neither of you is ever blocked.
 
-## Timeline (~5 hours, starting ~11:10)
 
-| Time | Goal |
-|---|---|
-| 11:10–11:30 | Clone, run, read this README together. **Don't change the contract without telling each other.** |
-| 11:30–12:45 | B1–B3 / F1–F4 → **checkpoint: create a pet, scan its QR code on a phone, see the tag page** |
-| 12:45–1:15 | Lunch, merge to `main`, flip `USE_MOCK = false`, test on a real iPhone via ngrok |
-| 1:15–2:45 | B4–B5 / F5–F6 → **checkpoint: the full demo flow works on real data** |
-| 2:45–3:30 | Bug fixes, polish, make the seed data look great on the map |
-| 3:30–4:00 | **Feature freeze.** Rehearse twice and record a backup demo video |
 
-## Git workflow
-
-- Classmate commits only in `backend/`. Laura commits only in `frontend/`. This avoids merge conflicts.
-- `git pull` before you start and before you push. Commit small and often, and merge to `main` at each checkpoint.
-- If Laura's Claude Code needs to touch `backend/`, tell the classmate first and pull his latest work.
-
-## Demo script (3–5 min)
-
-1. **Hook (30s):** a real story: a family cat missing since May, with the chip info buried in old adoption papers.
-2. **Passport (45s):** create a pet with previous names and a chip number, then generate the QR code.
-3. **Tap (60s):** a judge taps the NFC sticker with their own iPhone → the tag page opens with no app → they tap "Report a sighting" → a new pin appears on the live map on the big screen. *This is the wow moment.*
-4. **AI match (60s):** report an untagged sighting in plain English → show the parsed features → open the owner page → ranked matches with reasons.
-5. **Close (30s):** free, works on any phone, $0.30 per tag, built for Hoosier neighbors and shelters.
-
-## Stretch goal (only if everything above is done and rehearsed)
 
 - 📄 **Paperwork scanner:** upload a photo of old adoption papers, and Claude vision fills in the chip number, registry, and shelter.
 
