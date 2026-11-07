@@ -175,14 +175,14 @@ reasons[]: one readable string per factor that scored > 0
 
 Only Laura has Claude Code. **The classmate writes the backend by hand in VS Code.** Laura and Claude handle the frontend, and if Laura's side finishes early she can help with the backend.
 
-**Classmate: backend (`backend/`)**
+**Jovan Dukes: backend (`backend/`)**
 - [ ] **B1** `db.py`: `get_conn()` (with `row_factory = sqlite3.Row`) and `init_db()` running the schema above. Then `seed.py` with about 8 lost pets and about 15 sightings around Indy, Fishers, and Muncie.
 - [ ] **B2** `main.py`: `POST/GET /api/pets`, `tag_code` via `secrets.token_urlsafe(6)`, the QR endpoint, and `GET /api/tag/{code}` (strip private fields).
 - [ ] **B3** `PATCH /lost`, `POST /api/sightings`, `GET /api/feed`. Serve `frontend/` with `StaticFiles` and add the `/t/{code}` route.
 - [ ] **B4** `matching.py` with the formula above, plus `GET /api/pets/{id}/matches`, and top 3 matches in the sightings response.
 - [ ] **B5** `ai.py` keyword fallback first, then the Claude call if time allows. Wire it into `POST /api/sightings` and `/api/ai/parse`.
 
-**Laura: frontend (`frontend/`), demo, data**
+**Laura Romero: frontend (`frontend/`), demo, data**
 - [ ] **F1** `api.js` with a `USE_MOCK = true` flag and mock data that follows the contract, plus a shared mobile-first nav.
 - [ ] **F2** `index.html`: Leaflet map centered on Indy, red pins for lost pets and yellow for sightings, a feed list, and polling every 5s.
 - [ ] **F3** `passport.html`: form → POST → show the QR code and the tag URL ("write this to your NFC tag").
