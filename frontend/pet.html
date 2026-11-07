@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owner page · PawPass Indy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<script src="/js/api.js"></script>
+</head>
+<body>
+<main class="page stack" id="main"><p class="muted">Loading…</p></main>
+<script>
+renderNav("");
+const id = new URLSearchParams(location.search).get("id");
+let pet;
+
+async function load() {
+  try { pet = await api.getPet(id); } catch (e) { $("#main").innerHTML = '<p class="card err">Pet not found.</p>'; return; }
+  const lost = !!pet.is_lost;
+  $("#main").innerHTML = `
+    <div class="card stack">
+      ${pet.photo_url ? `<img src="${esc(pet.photo_url)}" alt="Photo of ${esc(pet.name)}" class="flyer-photo" style="margin:0">` : ""}
+      <div>
+        <h1>${esc(pet.name)}</h1>
+        <div class="muted">${esc([pet.color, pet.size, pet.breed || pet.species].filter(Boolean).join(" · "))}</div>
+      </div>
+      <dl class="rows">
+        ${pet.microchip_number ? `<div class="row"><dt>Microchip</dt><dd>${esc(pet.microchip_number)}${pet.chip_registry ? " (" + esc(pet.chip_registry) + ")" : ""}</dd></div>` : ""}
+        ${pet.adoption_shelter ? `<div class="row"><dt>Adopted from</dt><dd>${esc(pet.adoption_shelter)}${pet.adoption_date ? ", " + esc(pet.adoption_date) : ""}${pet.adoption_id ? " #" + esc(pet.adoption_id) : ""}</dd></div>` : ""}
+      </dl>
+    </div>
+    <div class="card stack">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        ${lost ? '<span class="tag-lost">Marked lost</span>' : '<span class="tag-safe">Safe at home</span>'}
+        <button id="toggle" class="btn btn-inline ${lost ? "btn-alt" : ""}">${lost ? "Mark found" : "Mark as lost"}</button>
+      </div>
+      <textarea id="notes" class="field" rows="2" placeholder="Notes (e.g. slipped out the back gate)" ${lost ? "hidden" : ""}></textarea>
+      <p id="msg" class="small muted"></p>
+    </div>
+    <h2 class="section-title">Possible matches</h2>
+    <div id="matches" class="stack"></div>`;
+  $("#toggle").onclick = toggle;
+  loadMatches();
+}
+
+async function toggle() {
+  const goingLost = !pet.is_lost;
+  $("#msg").textContent = goingLost ? "Getting your location…" : "Saving…";
+  let loc = { lat: pet.last_seen_lat, lng: pet.last_seen_lng };
+  if (goingLost) {
+    try { loc = await getLocation(); }
+    catch (e) { loc = { lat: 39.7684, lng: -86.1581 }; $("#msg").textContent = "Location unavailable, using Indianapolis center."; }
+  }
+  try {
+    await api.setLost(id, { is_lost: goingLost, last_seen_lat: loc.lat, last_seen_lng: loc.lng, lost_notes: $("#notes").value || "" });
+    load();
+  } catch (e) { $("#msg").textContent = "Couldn't save: " + e.message; }
+}
+
+async function loadMatches() {
+  try {
+    const ms = await api.getMatches(id);
+    $("#matches").innerHTML = ms.map(m => `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:12px"><span>${esc(m.sighting.description)}</span><b>${Math.round(m.score * 100)}%</b></div>
+        <div class="bar"><span style="width:${Math.round(m.score * 100)}%"></span></div>
+        <ul class="reasons">${m.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+        <div class="small muted" style="margin-top:6px">${ago(m.sighting.created_at)}</div>
+      </div>`).join("") || '<p class="muted">No matching sightings yet. Reload to check again.</p>';
+  } catch (e) { $("#matches").innerHTML = '<p class="muted">Couldn\'t load matches.</p>'; }
+}
+load();
+</script>
+</body>
+</html>
